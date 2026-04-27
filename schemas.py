@@ -18,9 +18,9 @@ class TransactionOut(BaseModel):
     type: str
     category: str
     amount: float
-    description: Optional[str]
-    product_id: Optional[int]
-    quantity: Optional[int]
+    description: Optional[str] = None
+    product_id: Optional[int] = None
+    quantity: Optional[int] = None
     is_ocr: bool
     created_at: datetime
 

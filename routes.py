@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -29,16 +29,28 @@ def verify_token(authorization: Optional[str] = Header(None)) -> dict:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
+DbSession = Annotated[Session, Depends(get_db)]
+UserPayload = Annotated[dict, Depends(verify_token)]
+
+
 @router.get("/transactions", response_model=List[schemas.TransactionOut])
-def get_transactions(db: Session = Depends(get_db), user: dict = Depends(verify_token)):
+def get_transactions(db: DbSession, user: UserPayload):
     user_id = str(user.get("sub", "1"))
     if user.get("role") == "admin":
         return db.query(models.Transaction).order_by(models.Transaction.created_at.desc()).all()
     return db.query(models.Transaction).filter(models.Transaction.user_id == user_id).order_by(models.Transaction.created_at.desc()).all()
 
 
-@router.post("/transactions", response_model=schemas.TransactionOut, status_code=201)
-def create_transaction(tx: schemas.TransactionCreate, db: Session = Depends(get_db), user: dict = Depends(verify_token)):
+@router.post(
+    "/transactions",
+    response_model=schemas.TransactionOut,
+    status_code=201,
+    responses={
+        400: {"description": "Insufficient stock"},
+        404: {"description": "Product not found or not owned by user"},
+    },
+)
+def create_transaction(tx: schemas.TransactionCreate, db: DbSession, user: UserPayload):
     # Reduce stock automatically on a sale
     user_id = str(user.get("sub", "1"))
     if tx.category == "sale" and tx.product_id and tx.quantity:
