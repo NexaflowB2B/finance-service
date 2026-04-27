@@ -7,8 +7,9 @@ import jwt
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from . import models, schemas
-from .database import get_db
+import models
+import schemas
+from database import get_db
 
 load_dotenv()
 

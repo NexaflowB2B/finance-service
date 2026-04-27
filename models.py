@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, Boolean
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.sql import func
-from .database import Base
+
+from database import Base
 
 
 class Transaction(Base):
